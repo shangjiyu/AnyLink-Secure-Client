@@ -1,0 +1,47 @@
+name: zeroq
+description: "ZerpQ Is A ZTNA Client."
+
+# Prevent accidental publishing to pub.dev.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.2
+  url_launcher: ^6.3.0
+  rename_app: ^1.6.1
+  window_manager: ^0.4.2
+  uuid: ^4.5.1
+  flutter_secure_storage: ^9.2.2
+  flutter_slidable: ^3.1.1
+  json_annotation: ^4.9.0
+  graphic: ^2.5.0
+  babstrap_settings_screen:
+    git:
+      url: https://github.com/Aykahshi/babstrap_settings_screen_fix
+      ref: main
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+
+  # Enable generation of localized Strings from arb files.
+  generate: true
+
+  assets:
+    # Add assets from the images directory to the application.
+    - assets/images/

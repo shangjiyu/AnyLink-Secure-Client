@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:ffi';
+import 'dart:io';
+import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../profile_list/profile.dart';
+import 'ffi_generated.dart';
 
 /// A service that stores and retrieves user settings.
 ///
@@ -13,9 +18,16 @@ import '../profile_list/profile.dart';
 /// you'd like to store settings on a web server, use the http package.
 class SettingsService {
   static const platform = MethodChannel('com.zeroq.demo/vpn');
+  late final LibAnyLink? _library;
 
   SettingsService._internal() {
     platform.setMethodCallHandler(_onMethodCall);
+    if (Platform.isWindows) {
+      _library = LibAnyLink(DynamicLibrary.open("libanylink.dll"));
+    } else if (Platform.isLinux) {
+      _library = LibAnyLink(DynamicLibrary.open("libanylink.so"));
+    }
+    _library?.initLogger();
   }
 
   static final SettingsService _instance = SettingsService._internal();
@@ -56,17 +68,23 @@ class SettingsService {
 
   Future<void> profileConnect(Profile profile) async {
     if (profile.connected || profile.type != ProfileType.openconnect) return;
-    platform.invokeMethod('startVpn', profile.getStartParams());
+    _library != null
+        ? await Isolate.run(() => _library.vpnConnect(json.encode(profile.getStartParams()).toNativeUtf8().cast()))
+        : await platform.invokeMethod('startVpn', profile.getStartParams());
   }
 
   Future<void> profileDisconnect(Profile profile) async {
     if (!profile.connected) return;
-    platform.invokeMethod('stopVpn');
+    _library != null
+        ? _library.vpnDisconnect()
+        : platform.invokeMethod('stopVpn');
   }
 
   Future<String> status(Profile profile) async {
     if (!profile.connected) return '';
-    return await platform.invokeMethod("status").then((value) => value ?? "{}");
+    return _library != null
+        ? _library.vpnStatus().cast<Utf8>().toDartString()
+        : await platform.invokeMethod("status").then((value) => value ?? "{}");
   }
 
   Future<void> setCallbackWithKey(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'profile.g.dart';
@@ -27,7 +28,7 @@ class Profile {
   void disconnect({String? err}) => {connected = false, lastErr = err};
 
   Map<String, dynamic> getStartParams() => {
-        "logLevel": logLevel ?? 'Debug',
+        "logLevel": kDebugMode ? 'Debug' : logLevel ?? 'Info',
         "logPath": logPath ?? '',
         "username": local?.username,
         "password": local?.password,
@@ -40,7 +41,7 @@ class Profile {
         "routes": local?.routes,
         "host": remotes?[0].host,
         "serverCert": remotes?[0].cert,
-        "serverKey": remotes?[0].securityKey,
+        "secretKey": remotes?[0].secretKey,
       };
 
   @override
@@ -74,7 +75,7 @@ class EndPoint {
       this.username,
       this.password,
       this.cert,
-      this.securityKey,
+      this.secretKey,
       this.insecureSkipVerify = true,
       this.ciscoCompat = true,
       this.dtls = true,
@@ -86,10 +87,11 @@ class EndPoint {
   String? group;
   String? caCert;
   String? cert;
-  String? securityKey;
+  String? secretKey;
   bool? insecureSkipVerify;
   bool? ciscoCompat;
   bool? dtls;
+  bool? otp;
   String? routes;
 
   factory EndPoint.fromJson(Map<String, dynamic> json) =>

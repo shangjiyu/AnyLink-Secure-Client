@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:uuid/uuid.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:zeroq/src/profile_list/profile.dart';
 
 import '../settings/settings_controller.dart';
@@ -23,7 +24,7 @@ class ProfileListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('PROFILES'),
+          title: const DragToMoveArea(child: Text('PROFILES')),
           actions: [
             IconButton(
               icon: const Icon(Icons.add_outlined),
@@ -94,9 +95,24 @@ class ProfileListView extends StatelessWidget {
                   ),
                   trailing: Switch(
                       value: item.connected,
-                      onChanged: (v) => !v
-                          ? controller.profileDisconnect(item)
-                          : controller.profileConnect(item)),
+                      onChanged: (v) => !v ? controller.profileDisconnect(item) : {
+                        if (item.remotes?[0].otp == true) {
+                          showDialog(context: context, builder: (context) => AlertDialog(
+                            title: const Text("Enter OTP"),
+                            content: TextFormField(
+                              autofocus: true,
+                              onFieldSubmitted: (v) {
+                                item.remotes?[0].secretKey = v;
+                                controller.profileConnect(item);
+                                              Navigator.pop(context);
+                                            },
+                            ),
+                          ))
+                        } else {
+                          controller.profileConnect(item),
+                        }
+                      },
+                  ),
                   onLongPress: () {
                     controller.profileStatus(item).then((status) {
                       showModalBottomSheet(

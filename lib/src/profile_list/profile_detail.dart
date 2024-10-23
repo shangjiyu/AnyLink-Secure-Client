@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:graphic/graphic.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:zeroq/src/profile_list/profile.dart';
 
 import '../settings/settings_controller.dart';
@@ -81,7 +82,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
         builder: (BuildContext context, Widget? child) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(_profile.value.name),
+              title: DragToMoveArea(child: Text(_profile.value.name)),
             ),
             body: Padding(
               key: _key,
@@ -217,15 +218,15 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
                       SettingsItem(
                         onTap: () async {
                           var property = await alertProperty(
-                              context, _profile.value.local?.securityKey);
+                              context, _profile.value.local?.secretKey);
                           if (property != null) {
-                            _profile.value.local?.securityKey = property;
+                            _profile.value.local?.secretKey = property;
                           }
                           widget.controller.updateProfile(_profile.value);
                         },
                         icons: Icons.password_rounded,
                         title: "Cert key",
-                        subtitle: _profile.value.local?.securityKey,
+                        subtitle: _profile.value.local?.secretKey,
                       ),
                       SettingsItem(
                         onTap: () async {
@@ -244,6 +245,12 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
                         onTap: () {},
                         icons: Icons.pin_outlined,
                         title: "OTP",
+                        trailing: Switch(
+                          value: _profile.value.remotes?[0].otp ?? false,
+                          onChanged: (b) {
+                            _profile.value.remotes?[0].otp = b;
+                            widget.controller.updateProfile(_profile.value);
+                        }),
                       ),
                     ],
                   ),
@@ -318,7 +325,7 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
         },
         selections: {
           'hover': PointSelection(
-            on: {GestureType.hover, GestureType.tap},
+            on: {GestureType.tap},
             clear: {
               GestureType.mouseExit,
               GestureType.scroll,

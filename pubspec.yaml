@@ -27,6 +27,7 @@ dependencies:
     git:
       url: https://github.com/Aykahshi/babstrap_settings_screen_fix
       ref: main
+  ffi: ^2.1.3
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +36,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
+  ffigen: ^15.0.0
 
 flutter:
   uses-material-design: true

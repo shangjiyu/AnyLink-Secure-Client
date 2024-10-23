@@ -26,6 +26,7 @@ class SettingsController with ChangeNotifier {
   final SettingsService _settingsService;
   final effectiveProfile = ValueNotifier<Profile?>(null);
   final routeObserver = RouteObserver<ModalRoute<void>>();
+
   // Make ThemeMode a private variable so it is not updated directly without
   // also persisting the changes with the SettingsService.
   late ThemeMode _themeMode;
@@ -33,6 +34,7 @@ class SettingsController with ChangeNotifier {
 
   // Allow Widgets to read the user's preferred ThemeMode.
   ThemeMode get themeMode => _themeMode;
+
   List<Profile> get profiles => _profiles;
 
   /// Load the user's settings from the SettingsService. It may load from a
@@ -102,7 +104,7 @@ class SettingsController with ChangeNotifier {
 
     await profileDisconnect(connected);
 
-    await _settingsService.profileConnect(profile);
+    _settingsService.profileConnect(profile);
     profile.connect();
     effectiveProfile.value = profile;
     notifyListeners();

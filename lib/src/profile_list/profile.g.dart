@@ -49,14 +49,15 @@ EndPoint _$EndPointFromJson(Map<String, dynamic> json) => EndPoint(
       username: json['username'] as String?,
       password: json['password'] as String?,
       cert: json['cert'] as String?,
-      securityKey: json['securityKey'] as String?,
+      secretKey: json['secretKey'] as String?,
       insecureSkipVerify: json['insecureSkipVerify'] as bool? ?? true,
       ciscoCompat: json['ciscoCompat'] as bool? ?? true,
       dtls: json['dtls'] as bool? ?? true,
       routes: json['routes'] as String?,
     )
       ..group = json['group'] as String?
-      ..caCert = json['caCert'] as String?;
+      ..caCert = json['caCert'] as String?
+      ..otp = json['otp'] as bool?;
 
 Map<String, dynamic> _$EndPointToJson(EndPoint instance) => <String, dynamic>{
       'host': instance.host,
@@ -65,9 +66,10 @@ Map<String, dynamic> _$EndPointToJson(EndPoint instance) => <String, dynamic>{
       'group': instance.group,
       'caCert': instance.caCert,
       'cert': instance.cert,
-      'securityKey': instance.securityKey,
+      'secretKey': instance.secretKey,
       'insecureSkipVerify': instance.insecureSkipVerify,
       'ciscoCompat': instance.ciscoCompat,
       'dtls': instance.dtls,
+      'otp': instance.otp,
       'routes': instance.routes,
     };

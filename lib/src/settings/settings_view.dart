@@ -44,7 +44,27 @@ class SettingsView extends StatelessWidget {
                   subtitle: "Lock SSLConnVPN to improve your privacy",
                 ),
                 SettingsItem(
-                  onTap: () {},
+                  onTap: () {
+                    showDialog(context: context, builder: (context) {
+                      return AlertDialog(
+                        title: const Text("Follow System"),
+                        content: const Text("Are you sure you want to follow system theme?"),
+                        actions: [
+                          TextButton(
+                            child: const Text("Cancel"),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          TextButton(
+                            child: const Text("OK"),
+                            onPressed: () {
+                              controller.updateThemeMode(ThemeMode.system);
+                              Navigator.pop(context);
+                            },
+                          )
+                      ],
+                      );
+                    });
+                  },
                   icons: Icons.dark_mode_rounded,
                   iconStyle: IconStyle(
                     iconsColor: Colors.white,

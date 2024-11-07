@@ -104,8 +104,8 @@ class ProfileListView extends StatelessWidget {
                               onFieldSubmitted: (v) {
                                 item.remotes?[0].secretKey = v;
                                 controller.profileConnect(item);
-                                              Navigator.pop(context);
-                                            },
+                                Navigator.pop(context);
+                              },
                             ),
                           ))
                         } else {
@@ -126,19 +126,15 @@ class ProfileListView extends StatelessWidget {
                               child: jsonDecode(status).length > 0
                                   ? ListView.separated(
                                       itemBuilder: (context, index) {
-                                        var k = jsonDecode(status)
-                                            .keys
-                                            .elementAt(index);
+                                        var k = jsonDecode(status).keys.elementAt(index);
                                         var v = jsonDecode(status)[k];
                                         return ListTile(
                                           title: Text(k.toString()),
                                           subtitle: Text(v.toString()),
                                         );
                                       },
-                                      separatorBuilder:
-                                          (BuildContext context, int index) =>
-                                              const Divider(),
-                                      itemCount: jsonDecode(status).length,
+                                      separatorBuilder: (BuildContext context, int index) => const Divider(),
+                                itemCount: jsonDecode(status).length,
                                     )
                                   : Text(status),
                             );

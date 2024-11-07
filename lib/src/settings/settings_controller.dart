@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zeroq/src/profile_list/profile_detail.dart';
 
 import '../profile_list/profile.dart';
 import 'settings_service.dart';
@@ -10,16 +11,20 @@ import 'settings_service.dart';
 /// uses the SettingsService to store and retrieve user settings.
 class SettingsController with ChangeNotifier {
   SettingsController(this._settingsService) {
-    _settingsService.setCallbackWithKey(
-        "statusChanged",
-        (p) => {
-              p['connected']
-                  ? effectiveProfile.value?.connect()
-                  : effectiveProfile.value?.disconnect(err: p['msg']),
-              effectiveProfile.value == null
-                  ? null
-                  : {notifyListeners(), effectiveProfile.value = null}
-            });
+    _settingsService.setCallbackWithKey("statusChanged",(p) => {
+      if (p['connected']) {
+        effectiveProfile.value?.connect(),
+        routeObserver.navigator?.popUntil((Route<dynamic> route) {
+          if (route.settings.name != ProfileDetailsView.routeName) {
+            routeObserver.navigator?.restorablePushNamed(ProfileDetailsView.routeName, arguments: effectiveProfile.value?.id);
+          }
+          return true;
+        }),
+      } else {
+        effectiveProfile.value?.disconnect(err: p['msg']),
+        effectiveProfile.value == null ? null : {notifyListeners(), effectiveProfile.value = null}
+      }
+    });
   }
 
   // Make SettingsService a private variable so it is not used directly.

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:graphic/graphic.dart';
 import 'package:window_manager/window_manager.dart';
@@ -203,30 +205,27 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
                       ),
                       SettingsItem(
                         onTap: () async {
-                          alertProperty(context, _profile.value.local?.cert)
-                              .then((p) {
-                            _profile.value.local?.cert == p
-                                ? null
-                                : _profile.value.local?.cert = p;
-                          });
+                          var pickerResult = await FilePicker.platform
+                              .pickFiles(
+                                  allowedExtensions: ['p12', 'pfx'],
+                                  type: FileType.custom);
+                          if (pickerResult != null) {
+                            _profile.value.local?.secretKey =
+                                pickerResult.files.single.name;
+                            var bytes =
+                                await File(pickerResult.files.single.path!)
+                                    .readAsBytes();
+                            _profile.value.local?.cert = base64Encode(bytes);
+                          } else {
+                            _profile.value.local?.cert = null;
+                            _profile.value.local?.secretKey = null;
+                          }
                           widget.controller.updateProfile(_profile.value);
                         },
                         icons: Icons.security_rounded,
                         title: "User Cert",
-                        subtitle: _profile.value.local?.cert,
-                      ),
-                      SettingsItem(
-                        onTap: () async {
-                          var property = await alertProperty(
-                              context, _profile.value.local?.secretKey);
-                          if (property != null) {
-                            _profile.value.local?.secretKey = property;
-                          }
-                          widget.controller.updateProfile(_profile.value);
-                        },
-                        icons: Icons.password_rounded,
-                        title: "Cert key",
                         subtitle: _profile.value.local?.secretKey,
+                        subtitleMaxLine: 1,
                       ),
                       SettingsItem(
                         onTap: () async {

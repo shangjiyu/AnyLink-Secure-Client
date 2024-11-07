@@ -106,7 +106,7 @@ class ProfileListView extends StatelessWidget {
                                 controller.profileConnect(item);
                                               Navigator.pop(context);
                                             },
-                            ),
+                                          ),
                           ))
                         } else {
                           controller.profileConnect(item),

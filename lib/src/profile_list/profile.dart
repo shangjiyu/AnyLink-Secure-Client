@@ -34,13 +34,14 @@ class Profile {
         "password": local?.password,
         "group": local?.group,
         "certificate": local?.cert,
+        "certKey": local?.secretKey,
         "caCert": local?.caCert,
         "insecureSkipVerify": local?.insecureSkipVerify,
         "ciscoCompat": local?.ciscoCompat,
         "noDtls": local?.dtls == true ? false : true,
         "routes": local?.routes,
         "host": remotes?[0].host,
-        "serverCert": remotes?[0].cert,
+        "serverCert": remotes?[0].cert, // server certificate fingerprint
         "secretKey": remotes?[0].secretKey,
       };
 

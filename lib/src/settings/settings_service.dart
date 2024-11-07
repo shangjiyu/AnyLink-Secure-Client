@@ -3,7 +3,9 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,8 +20,10 @@ import 'ffi_generated.dart';
 /// you'd like to store settings on a web server, use the http package.
 class SettingsService {
   static const platform = MethodChannel('com.zeroq.demo/vpn');
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   late final LibAnyLink? _library;
   late final ReceivePort _port;
+  final Map<String, dynamic> deviceId = {};
   final isWinOrLinux = Platform.isWindows || Platform.isLinux;
 
   SettingsService._internal() {
@@ -33,6 +37,42 @@ class SettingsService {
         });
 
       _library?.initLogger();
+    }
+    deviceId['computerName'] = Platform.localHostname;
+    deviceId['deviceType'] = defaultTargetPlatform.name;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        deviceInfoPlugin.androidInfo.then((value) {
+          deviceId['platformVersion'] = value.version;
+          deviceId['uniqueId'] = value.fingerprint;
+        });
+        break;
+      case TargetPlatform.iOS:
+        deviceInfoPlugin.iosInfo.then((value) {
+          deviceId['platformVersion'] = value.systemVersion;
+          deviceId['uniqueId'] = value.identifierForVendor;
+        });
+        break;
+      case TargetPlatform.macOS:
+        deviceInfoPlugin.macOsInfo.then((value) {
+          deviceId['platformVersion'] = value.osRelease;
+          deviceId['uniqueId'] = value.systemGUID;
+        });
+        break;
+      case TargetPlatform.windows:
+        deviceInfoPlugin.windowsInfo.then((value) {
+          deviceId['platformVersion'] = value.displayVersion;
+          deviceId['uniqueId'] = value.deviceId;
+        });
+        break;
+      case TargetPlatform.linux:
+        deviceInfoPlugin.linuxInfo.then((value) {
+          deviceId['platformVersion'] = value.version;
+          deviceId['uniqueId'] = value.machineId;
+        });
+        break;
+      default:
+        break;
     }
   }
 
@@ -79,12 +119,13 @@ class SettingsService {
             var ret = LibAnyLink(DynamicLibrary.open(
                     Platform.isWindows ? "libanylink.dll" : "libanylink.so"))
                 .vpnConnect(json
-                    .encode(profile.getStartParams())
+                    .encode({...profile.getStartParams(), ...deviceId})
                     .toNativeUtf8()
                     .cast());
             sendPort.send(ret.cast<Utf8>().toDartString());
           }, _port.sendPort)
-        : await platform.invokeMethod('startVpn', profile.getStartParams());
+        : await platform.invokeMethod(
+            'startVpn', {...profile.getStartParams(), ...deviceId});
   }
 
   Future<void> profileDisconnect(Profile profile) async {

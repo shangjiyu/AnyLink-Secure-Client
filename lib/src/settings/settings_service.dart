@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:ffi';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:isolate';
 
@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tray_manager/tray_manager.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../profile_list/profile.dart';
 import 'ffi_generated.dart';
@@ -18,7 +20,7 @@ import 'ffi_generated.dart';
 /// By default, this class does not persist user settings. If you'd like to
 /// persist the user settings locally, use the shared_preferences package. If
 /// you'd like to store settings on a web server, use the http package.
-class SettingsService {
+class SettingsService with TrayListener {
   static const platform = MethodChannel('com.zeroq.demo/vpn');
   static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   late final LibAnyLink? _library;
@@ -29,7 +31,7 @@ class SettingsService {
   SettingsService._internal() {
     platform.setMethodCallHandler(_onMethodCall);
     if (isWinOrLinux) {
-      _library = LibAnyLink(DynamicLibrary.open(
+      _library = LibAnyLink(ffi.DynamicLibrary.open(
           Platform.isWindows ? "libanylink.dll" : "libanylink.so"));
       _port = ReceivePort()
         ..listen((msg) {
@@ -43,7 +45,7 @@ class SettingsService {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         deviceInfoPlugin.androidInfo.then((value) {
-          deviceId['platformVersion'] = value.version;
+          deviceId['platformVersion'] = "${value.version.release}(${value.version.sdkInt}) ${value.version.securityPatch}";
           deviceId['uniqueId'] = value.fingerprint;
         });
         break;
@@ -73,6 +75,42 @@ class SettingsService {
         break;
       default:
         break;
+    }
+    if (isWinOrLinux || Platform.isMacOS) {
+      windowManager.ensureInitialized();
+      windowManager.setPreventClose(true);
+      WindowOptions windowOptions = const WindowOptions(
+        size: Size(375.0, 667.0),
+        //iphone 8
+        center: true,
+        backgroundColor: Colors.transparent,
+        skipTaskbar: false,
+        windowButtonVisibility: false,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.setResizable(false);
+        await windowManager.show();
+        await windowManager.focus();
+      });
+      // add system tray
+      TrayManager.instance.setIcon(Platform.isWindows ? "assets/images/app_logo.ico" : "assets/images/app_logo.png");
+      TrayManager.instance.setContextMenu(Menu(
+          items: [
+            MenuItem(
+              label: "Open",
+              onClick: (menu) => windowManager.show(),
+            ),
+            MenuItem.separator(),
+            MenuItem(
+              label: "Exit",
+              onClick: (menu) => exit(0),
+            ),
+          ]
+      ));
+      if (!TrayManager.instance.hasListeners) {
+        TrayManager.instance.addListener(this);
+      }
     }
   }
 
@@ -108,6 +146,14 @@ class SettingsService {
     });
   }
 
+  Future<String?> passcode () async {
+    return await settingsStorage.read(key: "passcode");
+  }
+
+  Future<void> updatePasscode (String passcode) async {
+    return await settingsStorage.write(key: "passcode", value: passcode);
+  }
+
   saveProfiles(List<Profile> profiles) async {
     await settingsStorage.write(key: "profiles", value: jsonEncode(profiles));
   }
@@ -117,7 +163,7 @@ class SettingsService {
     final startParams = {...profile.getStartParams(), ...deviceId};
     isWinOrLinux
         ? await Isolate.spawn((sendPort) {
-            var ret = LibAnyLink(DynamicLibrary.open(
+            var ret = LibAnyLink(ffi.DynamicLibrary.open(
                     Platform.isWindows ? "libanylink.dll" : "libanylink.so"))
                 .vpnConnect(json.encode(startParams).toNativeUtf8().cast());
             sendPort.send(ret.cast<Utf8>().toDartString());
@@ -147,5 +193,10 @@ class SettingsService {
       return _callbackPool[call.method]!(
           Map<String, dynamic>.from(call.arguments ?? {}));
     }
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    TrayManager.instance.popUpContextMenu();
   }
 }

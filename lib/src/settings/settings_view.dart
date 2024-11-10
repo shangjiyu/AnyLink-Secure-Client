@@ -1,5 +1,6 @@
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 
 import 'settings_controller.dart';
 
@@ -16,6 +17,11 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller.isLocked) {
+        buildLockScreen(context);
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -33,7 +39,10 @@ class SettingsView extends StatelessWidget {
               backgroundColor: Colors.transparent,
               items: [
                 SettingsItem(
-                  onTap: () {},
+                  onTap: () {
+                    controller.locked(true);
+                    buildLockScreen(context);
+                  },
                   icons: Icons.fingerprint,
                   iconStyle: IconStyle(
                     iconsColor: Colors.white,
@@ -108,5 +117,36 @@ class SettingsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<dynamic> buildLockScreen(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return controller.passcode == ""
+              ? ScreenLock.create(
+                  title: const Text("New Passcode"),
+                  confirmTitle: const Text("Confirm New Passcode"),
+                  onConfirmed: (passcode) {
+                    controller.updatePasscode(passcode);
+                    Navigator.pop(context);
+                  })
+              : ScreenLock(
+                  correctString: 'x' * 4,
+                  onUnlocked: () async {
+                    controller.locked(false);
+                    Navigator.pop(context);
+                  },
+                  onValidate: (passcode) async {
+                    return passcode == controller.passcode;
+                  },
+                  customizedButtonChild: const Icon(Icons.fingerprint),
+                  customizedButtonTap: () async {
+                    controller.localAuth();
+                  },
+                  onOpened: () async => controller.localAuth(),
+                  title: const Text('Unlock to Connect VPN'),
+                );
+        });
   }
 }

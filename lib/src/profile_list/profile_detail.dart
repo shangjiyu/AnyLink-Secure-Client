@@ -8,9 +8,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:graphic/graphic.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:zeroq/src/profile_list/profile.dart';
 
 import '../settings/settings_controller.dart';
+import 'profile.dart';
 
 /// Displays detailed information about a SampleItem.
 class ProfileDetailsView extends StatefulWidget {
@@ -436,8 +436,8 @@ class _ProfileDetailsViewState extends State<ProfileDetailsView>
 
   @override
   void dispose() {
-    super.dispose();
     _timer?.cancel();
     widget.controller.routeObserver.unsubscribe(this);
+    super.dispose();
   }
 }

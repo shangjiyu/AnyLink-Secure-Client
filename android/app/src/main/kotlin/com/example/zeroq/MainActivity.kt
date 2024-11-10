@@ -1,27 +1,30 @@
 package com.example.zeroq
 
-import android.app.Activity
 import android.content.Intent
 import android.net.VpnService
 import android.os.Handler
 import android.os.Looper
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.JSONUtil
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
-import kotlinx.coroutines.*
-import org.jetbrains.annotations.NotNull
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 private const val ACTION_PREPARE_VPN = 0xF1
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
 
     private val scope = MainScope()
     private var vpnPreparing: CancellableContinuation<Boolean>? = null
 
-    override fun configureFlutterEngine(@NotNull flutterEngine: FlutterEngine) {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel.setMethodCallHandler { call, result ->
@@ -65,18 +68,18 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == ACTION_PREPARE_VPN) {
             if (scope.isActive && vpnPreparing?.isActive == true) {
-                vpnPreparing?.resume(resultCode == Activity.RESULT_OK)
+                vpnPreparing?.resume(resultCode == RESULT_OK)
             }
         }
     }
 
     private suspend fun prepareVpn(): Boolean {
-        val prepareIntent = VpnService.prepare(activity) ?: return true
-        activity.startActivityForResult(prepareIntent, ACTION_PREPARE_VPN)
+        val prepareIntent = VpnService.prepare(this) ?: return true
+        this.startActivityForResult(prepareIntent, ACTION_PREPARE_VPN)
         return suspendCancellableCoroutine {
             vpnPreparing = it
         }
@@ -86,9 +89,8 @@ class MainActivity : FlutterActivity() {
         result: Result,
         withService: suspend CoroutineScope.(ZeroqVpnService) -> Unit,
     ) {
-        val activity = this.activity
         scope.launch {
-            withService.invoke(this, ZeroqVpnService.getInstance(activity))
+            withService.invoke(this, ZeroqVpnService.getInstance(this@MainActivity))
         }
     }
 

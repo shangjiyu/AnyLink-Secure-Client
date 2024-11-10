@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:zeroq/src/profile_list/profile_detail.dart';
 
 import '../profile_list/profile.dart';
@@ -36,19 +37,22 @@ class SettingsController with ChangeNotifier {
   // also persisting the changes with the SettingsService.
   late ThemeMode _themeMode;
   late List<Profile> _profiles;
+  late String _passcode;
+  late bool _locked = true;
 
   // Allow Widgets to read the user's preferred ThemeMode.
   ThemeMode get themeMode => _themeMode;
-
   List<Profile> get profiles => _profiles;
+  String get passcode => _passcode;
+  bool get isLocked => _locked;
 
   /// Load the user's settings from the SettingsService. It may load from a
   /// local database or the internet. The controller only knows it can load the
   /// settings from the service.
   Future<void> loadSettings() async {
     _themeMode = await _settingsService.themeMode();
-
     _profiles = await _settingsService.getProfiles();
+    _passcode = await _settingsService.passcode() ?? '';
 
     // Important! Inform listeners a change has occurred.
     notifyListeners();
@@ -57,16 +61,12 @@ class SettingsController with ChangeNotifier {
   /// Update and persist the ThemeMode based on the user's selection.
   Future<void> updateThemeMode(ThemeMode? newThemeMode) async {
     if (newThemeMode == null) return;
-
     // Do not perform any work if new and old ThemeMode are identical
     if (newThemeMode == _themeMode) return;
-
     // Otherwise, store the new ThemeMode in memory
     _themeMode = newThemeMode;
-
     // Important! Inform listeners a change has occurred.
     notifyListeners();
-
     // Persist the changes to a local database or the internet using the
     // SettingService.
     await _settingsService.updateThemeMode(newThemeMode);
@@ -131,5 +131,30 @@ class SettingsController with ChangeNotifier {
 
   Profile getProfile(String id) {
     return profiles.firstWhere((p) => p.id == id);
+  }
+
+  Future<void> updatePasscode(String passcode) async {
+    await _settingsService.updatePasscode(passcode);
+    _passcode = passcode;
+    notifyListeners();
+  }
+
+  Future<void> locked(bool lock) async {
+    _locked = lock;
+    // notifyListeners();
+  }
+
+  Future<void> localAuth() async {
+    final localAuth = LocalAuthentication();
+    try {
+      var didAuthed = await localAuth.authenticate(localizedReason: 'Pls Authenticate',
+              options: AuthenticationOptions(biometricOnly:  _settingsService.isWinOrLinux ? false : true, stickyAuth: true));
+      if (didAuthed) {
+        locked(!didAuthed);
+        routeObserver.navigator?.pop();
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 }

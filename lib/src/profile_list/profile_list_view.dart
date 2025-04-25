@@ -114,6 +114,10 @@ class ProfileListView extends StatelessWidget {
                             },
                           ),
                         ))
+                      } else if ((item.local?.password?.isEmpty ?? true) && (item.local?.cert?.isEmpty ?? true)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('local cert of password must be set')),
+                        )
                       } else {
                         controller.profileConnect(item),
                       }

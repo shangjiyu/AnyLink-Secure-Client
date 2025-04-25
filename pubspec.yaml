@@ -14,34 +14,34 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  provider: ^6.1.2
-  url_launcher: ^6.3.0
-  rename_app: ^1.6.1
-  window_manager: ^0.4.2
+  provider: ^6.1.4
+  url_launcher: ^6.3.1
+  rename_app: ^1.6.2
+  window_manager: ^0.4.3
   uuid: ^4.5.1
-  flutter_secure_storage: ^9.2.2
-  flutter_slidable: ^3.1.1
+  flutter_secure_storage: ^9.2.4
+  flutter_slidable: ^4.0.0
   json_annotation: ^4.9.0
-  graphic: ^2.5.0
+  graphic: ^2.5.1
   babstrap_settings_screen:
     git:
       url: https://github.com/Aykahshi/babstrap_settings_screen_fix
       ref: main
-  ffi: ^2.1.3
-  device_info_plus: ^11.1.0
-  file_picker: ^8.1.3
-  flutter_screen_lock: ^9.1.0
+  ffi: ^2.1.4
+  device_info_plus: ^11.3.3
+  file_picker: ^10.1.2
+  flutter_screen_lock: ^9.2.1+1
   local_auth: ^2.3.0
-  tray_manager: ^0.2.4
+  tray_manager: ^0.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^4.0.0
-  build_runner: ^2.4.13
-  json_serializable: ^6.8.0
-  ffigen: ^15.0.0
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.15
+  json_serializable: ^6.9.4
+  ffigen: ^18.1.0
 
 flutter:
   uses-material-design: true

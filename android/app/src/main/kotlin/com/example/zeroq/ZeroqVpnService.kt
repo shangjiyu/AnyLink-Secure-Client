@@ -84,7 +84,7 @@ class ZeroqVpnService : VpnService() {
                         state = ZeroqState.STOPPED
                         MainActivity.callbackWithKey(
                             "statusChanged",
-                            mapOf("connected" to false, "msg" to "SSLTUNUP ERR")
+                            mapOf("connected" to false, "msg" to "SSL TUN UP ERR")
                         )
                     } else {
                         state = ZeroqState.RUNNING
@@ -98,6 +98,9 @@ class ZeroqVpnService : VpnService() {
     private fun setupVpn(tunConfig: JSONObject): ParcelFileDescriptor? {
         val builder = Builder().addAddress(tunConfig.getString("VPNAddress"), tunConfig.getInt("VPNPrefix"))
             .setMtu(tunConfig.getInt("MTU"))
+            .apply {
+                addDisallowedApplication(packageName)
+            }
             .allowBypass().setBlocking(true).setSession("ZeroQ").setConfigureIntent(
                 PendingIntent.getActivity(
                     this,
@@ -126,14 +129,16 @@ class ZeroqVpnService : VpnService() {
                 }
             }
         }
-        tunConfig.optJSONArray("SplitExclude")?.let { it ->
-            for (i in 0 until it.length()) {
-                (it[i] as String).split('/').let {
-                    builder.excludeRoute(IpPrefix(InetAddress.getByName(it[0]), it[1].toInt()))
+        if (Build.VERSION.SDK_INT > 32) {
+            tunConfig.optJSONArray("SplitExclude")?.let { it ->
+                for (i in 0 until it.length()) {
+                    (it[i] as String).split('/').let {
+                        builder.excludeRoute(IpPrefix(InetAddress.getByName(it[0]), it[1].toInt()))
+                    }
                 }
             }
+            tunConfig.getString("ServerAddress").let { builder.excludeRoute(IpPrefix(InetAddress.getByName(it), 32)) }
         }
-        tunConfig.getString("ServerAddress").let { builder.excludeRoute(IpPrefix(InetAddress.getByName(it), 32)) }
         return builder.establish()
     }
 

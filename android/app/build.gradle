@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.zeroq"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.0.12433566"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -30,11 +30,17 @@ android {
         versionName = flutter.versionName
     }
 
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs', 'lib']
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -43,6 +49,7 @@ flutter {
     source = "../.."
 }
 
+
 dependencies {
-    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.15.0'
+    implementation 'net.java.dev.jna:jna:5.15.0@aar'
 }
